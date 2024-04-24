@@ -1,18 +1,23 @@
+mod rustls_danger;
+
 use std::io::{stdout, Read, Write};
 use std::net::TcpStream;
 use std::sync::Arc;
 
-use rustls::RootCertStore;
+use rustls::{ClientConfig, RootCertStore};
 use rustls::craft::{CHROME_108, CHROME_108_EXT, CHROME_CIPHER, CraftPadding, FingerprintBuilder};
 use rustls::craft::{Fingerprint, CraftExtension};
-use rustls::craft::CraftExtension::FakeApplicationSettings;
-use rustls::internal::msgs::enums::ExtensionType;
-use rustls::internal::msgs::handshake::ClientExtension;
+use webpki_roots::TLS_SERVER_ROOTS;
+// use rustls::craft::CraftExtension::FakeApplicationSettings;
+// use rustls::internal::msgs::enums::ExtensionType;
+// use rustls::internal::msgs::handshake::ClientExtension;
+
+use rustls_danger::NoCertificateVerification;
 
 
 fn main() {
     let root_store = RootCertStore {
-        roots: webpki_roots::TLS_SERVER_ROOTS.into(),
+        roots: TLS_SERVER_ROOTS.into(),
     };
 
     let fingerprint: &Fingerprint = &CHROME_108.main;
@@ -20,7 +25,7 @@ fn main() {
 
     // let aaa = CHROME_108_EXT.clone();
     // let bbb = CHROME_CIPHER.clone();
-    // 
+    //
     // let fingerprint = Fingerprint {
     //     extensions: &[],
     //     shuffle_extensions: false,
@@ -32,10 +37,13 @@ fn main() {
     //     psk_len: 16000
     // });
 
-    let config = rustls::ClientConfig::builder()
+    let mut config = ClientConfig::builder()
         .with_root_certificates(root_store)
         .with_no_client_auth()
         .with_fingerprint(fingerprint.builder());
+
+    let mut dangerous_config = ClientConfig::dangerous(&mut config);
+    dangerous_config.set_certificate_verifier(Arc::new(NoCertificateVerification {}));
 
     // Allow using SSLKEYLOGFILE.
     // config.key_log = Arc::new(rustls::KeyLogFile::new());
@@ -47,15 +55,13 @@ fn main() {
     tls.write_all(
         concat!(
         "GET /img/2024/4/23/3349451/thumb_small.png HTTP/1.1\r\n",
-        "Host: derpicdn.net\n",
+        "Host: derpicdn.net\r\n",
         "Connection: close\r\n",
         "Accept-Encoding: identity\r\n",
         "\r\n"
-        )
-            .as_bytes(),
-    )
-        .unwrap();
-    // 
+        ).as_bytes()
+    ).unwrap();
+    //
 
     let ciphersuite = tls
         .conn

@@ -296,6 +296,7 @@ name = "rape-by-proxy"
 version = "0.1.0"
 dependencies = [
  "craftls",
+ "rustls-pki-types",
  "webpki-roots",
 ]
 

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 craftls = "0.0.2"
+rustls-pki-types = "*"
 webpki-roots = "0.26.1"
 
 #env_logger = "0.10"
