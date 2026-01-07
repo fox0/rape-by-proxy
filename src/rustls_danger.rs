@@ -41,7 +41,7 @@ impl ServerCertVerifier for NoCertificateVerification {
         _cert: &rustls_pki_types::CertificateDer<'_>,
         _dss: &DigitallySignedStruct,
     ) -> Result<HandshakeSignatureValid, Error> {
-        unimplemented!()
+        Ok(HandshakeSignatureValid::assertion())
     }
 
     fn supported_verify_schemes(&self) -> Vec<SignatureScheme> {
@@ -56,8 +56,8 @@ mod tests {
     use std::net::TcpStream;
     use std::sync::Arc;
 
-    use rustls::{ClientConfig, RootCertStore};
     use rustls::craft::CHROME_108;
+    use rustls::{ClientConfig, RootCertStore};
     use webpki_roots::TLS_SERVER_ROOTS;
 
     use super::*;
@@ -82,13 +82,15 @@ mod tests {
         let mut tls = rustls::Stream::new(&mut conn, &mut sock);
         tls.write_all(
             concat!(
-            "GET / HTTP/1.1\r\n",
-            "Host: www.xnxx.com\r\n",
-            "Connection: close\r\n",
-            "Accept-Encoding: identity\r\n",
-            "\r\n"
-            ).as_bytes()
-        ).unwrap();
+                "GET / HTTP/1.1\r\n",
+                "Host: www.xnxx.com\r\n",
+                "Connection: close\r\n",
+                "Accept-Encoding: identity\r\n",
+                "\r\n"
+            )
+            .as_bytes(),
+        )
+        .unwrap();
     }
 
     #[test]
